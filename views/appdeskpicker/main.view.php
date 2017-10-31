@@ -1,4 +1,5 @@
 <?php
+    \Nos\I18n::current_dictionary(array('novius_renderers::appdeskpicker'));
     $uniqid = uniqid('tabs_');
 ?>
 <style type="text/css">
@@ -44,7 +45,18 @@
         var loadAppdesk = function ($wijtab, target) {
             var $tab = $(target.tab);
             if (!$tab.data('loaded')) {
-                $(target.panel).load($tab.data('appdesk-url'));
+                $(target.panel).load($tab.data('appdesk-url'), function (responseData) {
+                    try {
+                        var data = JSON.parse(responseData);
+                        if (data.hasOwnProperty('error')) {
+                            // An error happened, but it's glitchy and the error structure is inconsistent
+                            // across all appdesks, so we have to output a generic error message...
+                            $(target.panel).html(<?= json_encode(__('You are not allowed to access to this application.')) ?>);
+                        }
+                    } catch (e) {
+                        // It's not a valid JSON, so we have nothing to do
+                    }
+                });
 
                 $(target.panel).closest('.ui-dialog-content')
                     .bind('appdesk_pick_' + $tab.data('appdesk-model'), function(e, item) {
